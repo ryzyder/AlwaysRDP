@@ -1,0 +1,43 @@
+AlwaysRDP
+
+Open AlwaysRDP from your desktop. Use the language selector at the top right
+to choose English, Español or Português. The choice is remembered and takes
+effect immediately, without restarting the session or clearing edited fields.
+The logo is unchanged. Existing profiles and encrypted passwords are preserved.
+
+CONNECTIONS
+Select a saved profile, create a new one, or import an .rdp file. Enter the
+computer/IP, username and optional password. Save stores the profile; Connect
+starts it on virtual Desktop 2 in full screen. Only one session is supervised
+at a time. View session opens that desktop. Stop pauses the connection.
+Delete profile asks for confirmation and removes the profile and its saved
+password. Deleting the active profile stops its session. Deleting a profile
+does not delete the remote Windows account or any remote files.
+
+PASSWORDS
+Passwords are encrypted with Windows DPAPI for your current Windows account.
+An empty password field keeps a previously saved profile password. Clear
+removes it when you save. Re-enter the password if you change the computer
+or username. The program temporarily supplies the selected credential to
+Windows and restores the previous credential after login or closing.
+Passwords are not written in plain text to profiles, logs or command lines.
+
+SHARING & STARTUP
+Clipboard is the only sharing option enabled by default, including imported
+profiles. Other sharing options, such as drives and printers, are optional
+and saved per profile. Save them and click Connect to apply them to a session.
+The remote server may restrict which sharing features are available.
+The startup checkbox starts AlwaysRDP in the background at Windows sign-in.
+It resumes the last selected connection unless you left the session stopped.
+Closing the manager window keeps the supervisor running in the system tray.
+The desktop shortcut Stop AlwaysRDP exits the supervisor and closes its client.
+
+RECONNECTION
+The supervisor watches its own mstsc process and Windows RDP client events.
+It allows internal connection transitions to finish instead of closing the
+client immediately. After a real process exit or network failure, it retries.
+An access error pauses retries and keeps the Windows dialog available.
+
+The detailed Spanish technical notes are in LEEME.txt. Connection data remains
+in the existing application folder for compatibility. Back up that entire
+folder; encrypted passwords are tied to your Windows account.

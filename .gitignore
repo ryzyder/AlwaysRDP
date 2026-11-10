@@ -1,0 +1,41 @@
+# Build outputs and downloaded dependency
+build/
+bin/
+obj/
+vendor/
+TestResults/
+.vs/
+*.user
+*.suo
+
+# Runtime data: never commit even encrypted connection records
+conexiones.xml*
+preferences.xml*
+perfiles/
+*.rdp
+*.rdg
+*.log
+*.log.*
+*.bak
+*.tmp
+verificacion.txt
+error.txt
+credential-restore*
+*.pfx
+*.p12
+*.pem
+*.key
+.env
+.env.*
+
+# Locally generated executables and packages
+*.exe
+*.dll
+*.zip
+*.pdb
+*.lnk
+
+# OS metadata
+Thumbs.db
+Desktop.ini
+.DS_Store

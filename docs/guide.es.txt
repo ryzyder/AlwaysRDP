@@ -1,0 +1,147 @@
+AlwaysRDP está disponible en English, Español y Português. El selector de idioma está arriba a la derecha y recuerda tu elección sin reiniciar la sesión.
+
+AlwaysRDP — Gestor de conexiones
+
+Accesos en el Escritorio:
+  AlwaysRDP: abre el gestor para elegir y configurar conexiones.
+  Stop AlwaysRDP: detiene el supervisor y cierra solamente su conexión.
+
+También se inicia al entrar en Windows, en segundo plano, con la última
+conexión seleccionada. Si detienes la sesión desde el gestor, conserva
+ese estado y espera hasta que pulses Conectar o Ver sesión.
+Para quitar el inicio automático,
+elimina únicamente el acceso "AlwaysRDP" de la carpeta Inicio
+(Configuración de Windows > Aplicaciones > Inicio también permite deshabilitarlo).
+
+GESTOR
+Selecciona una conexión guardada o pulsa Nueva conexión.
+Escribe un nombre, el equipo o IP (puede incluir :puerto) y el usuario.
+Puedes usar DOMINIO\usuario, usuario@dominio o dejar el usuario vacío
+para que Windows use la cuenta que tenga guardada.
+Guardar conserva el perfil sin cambiar la sesión actual.
+Conectar selecciona el perfil, reemplaza la sesión supervisada actual
+y abre la nueva conexión en el escritorio 2. Se mantiene una sesión
+supervisada a la vez; los perfiles guardados pueden ser varios.
+Si eliges la misma sesión que ya está conectada, simplemente la muestra.
+Importar .rdp conserva los ajustes de conexión y de gateway de ese archivo,
+pero elimina las contraseñas y la firma del archivo copiado.
+El campo Contraseña permite guardar una clave por conexión, cifrada con
+DPAPI para tu usuario de Windows. No se guarda en texto claro, en los
+argumentos de mstsc, en el archivo RDP ni en el registro de actividad.
+Al abrir un perfil guardado, el campo aparece vacío para conservar la
+contraseña existente. Escribe una nueva para reemplazarla; Borrar la quita
+del perfil al guardar. Si cambias equipo o usuario, debes escribir la nueva
+contraseña, porque el cifrado está vinculado a la identidad del perfil.
+Si dejas el campo vacío y no había una contraseña guardada en el perfil,
+se usan las credenciales compatibles de Windows o su diálogo de acceso.
+El gestor entrega temporalmente la credencial elegida al cliente de Windows
+y restaura la credencial previa después del inicio de sesión o al cerrar.
+Ver sesión lleva al escritorio 2; si estaba detenida, vuelve a conectarla.
+Detener pausa la sesión sin cerrar el gestor. Cerrar la ventana del gestor
+lo deja funcionando en la bandeja. El menú de la bandeja permite salir.
+El icono propio muestra dos pantallas con un rayo en color verde.
+Eliminar perfil borra la conexión seleccionada y su contraseña cifrada,
+después de pedir confirmación. Si es la sesión activa, la detiene. No abre
+otra sesión automáticamente. Elimina también su plantilla y la entrada en
+la copia rotativa de configuración. No borra el usuario ni datos remotos,
+ni el archivo RDP original que hayas importado. Puedes borrar todos los
+perfiles: no se vuelven a importar automáticamente al reiniciar.
+
+RECURSOS E INICIO
+En la pestaña Recursos e inicio puedes marcar los recursos de cada perfil:
+portapapeles, unidades/discos, impresoras, sonido, micrófono, cámaras,
+tarjetas inteligentes, puertos COM, USB/dispositivos, ubicación y WebAuthn.
+Los perfiles existentes, los nuevos y los importados empiezan con solo
+portapapeles. Los ajustes de recursos del .rdp importado no se habilitan
+automáticamente. Marca lo que quieras compartir y pulsa Guardar.
+Para cambiar los permisos de la sesión que ya está abierta, pulsa Conectar:
+se reabre si cambió algún recurso. El servidor puede limitar redirecciones.
+Compartir unidades habilita las unidades locales mediante el cliente RDP.
+
+En esa misma pestaña, Iniciar AlwaysRDP al entrar en Windows agrega
+o quita su acceso en la carpeta Inicio de tu usuario, sin pedir administrador.
+La casilla se aplica inmediatamente y muestra si existe ese acceso.
+Al iniciar Windows se abre en segundo plano y conserva la última selección
+y el estado de la sesión: si la detuviste, espera a que pulses Conectar.
+
+FUNCIONAMIENTO
+Usa mstsc.exe, el cliente de Windows, con conexión directa mediante /v y /f.
+Usa "AlwaysRDP" para iniciar esta versión. Abrir Administrator.rdp
+directamente todavía puede mostrar la advertencia de archivo sin firma.
+En la primera ejecución importa Administrator.rdp de tu Escritorio.
+Después utiliza el perfil seleccionado y regenera Administrator-supervisado.rdp
+con pantalla completa y solo portapapeles. Si editas el archivo original,
+vuelve a importarlo para crear un perfil con esos cambios.
+Copia esas preferencias a Documents\Default.rdp y después inicia mstsc /v,
+sin abrir un archivo RDP explícito. Esto evita el nuevo aviso de archivo RDP
+y permite que el portapapeles se habilite con la preferencia guardada.
+El Default.rdp anterior se conserva como Default-anterior.rdp.bak.
+Estas preferencias también se aplican a conexiones nuevas que abras
+manualmente en mstsc sin proporcionar otro archivo de configuración.
+Por defecto desactiva discos, impresoras, puertos, tarjetas, USB, cámaras,
+ubicación, Windows Hello/WebAuthn, sonido y micrófono. Puedes habilitarlos
+por perfil en Recursos e inicio. Conserva los datos de conexión
+y autenticación del archivo original. No registra contraseñas en los logs.
+Estas restricciones de redirección también se aplicaron al Administrator.rdp
+original del Escritorio. Se conservó una copia de respaldo en la carpeta
+work del chat de Codex.
+Las combinaciones de Windows se quedan en el equipo local para cambiar
+de escritorio aunque la conexión esté a pantalla completa.
+
+El proceso que abre el supervisor se mueve al escritorio virtual 2.
+Si no existe un segundo escritorio, lo crea al lanzar la conexión.
+Si cambian las credenciales o la configuración del servidor, Windows puede
+pedir intervención en el escritorio 2. El programa no acepta advertencias
+de seguridad automáticamente.
+No cambia las directivas globales de advertencias ni instala certificados.
+
+Detecta el evento de desconexión del cliente (1026) por su PID y también
+la terminación del proceso. Cierra solo su instancia y vuelve a abrirla.
+Solo marca Conectado cuando Windows confirma el inicio de sesión (1027).
+Un evento de desconexión por sí solo no cierra inmediatamente mstsc:
+puede ser una transición interna seguida de los eventos 1025 y 1027.
+Espera 8 segundos y cancela la desconexión pendiente si vuelve a progresar.
+Si se confirma un fallo de acceso, pausa los reintentos pero conserva el
+diálogo de Windows para leer el error o completar el acceso. Si después
+Windows confirma el inicio de sesión en ese proceso, retoma la supervisión.
+Un proceso que sí terminó se trata inmediatamente, sin esa espera.
+Los fallos identificados de red conservan los reintentos automáticos.
+Los reintentos esperan 1, 2, 4, 8 y hasta 300 segundos entre fallos consecutivos.
+Después de un inicio de sesión correcto vuelve a la espera inicial de 1 segundo.
+Si falla la red o el servidor está apagado, no puede mantener una sesión
+conectada; seguirá intentando recuperarla.
+
+Cerrar manualmente la ventana RDP también provoca que se vuelva a abrir.
+Usa "Stop AlwaysRDP" para detenerlo de verdad.
+El icono de la bandeja permite abrir el escritorio 2 o detener el supervisor.
+No cierra clientes RDP que hayas abierto por otros medios. Si otra conexión
+entra al mismo servidor con la misma cuenta, la política del servidor puede
+desconectar una de las sesiones; el supervisor seguirá reintentando.
+
+El programa mueve las ventanas sin activar deliberadamente el escritorio 2
+e intenta restaurar el foco cuando aparece una ventana nueva. Los avisos del
+sistema o el comportamiento de mstsc pueden afectar el foco; no bloquea
+tu teclado ni impide que entres manualmente al escritorio remoto.
+
+supervisor.log registra estado, PID y motivos de desconexión, sin dirección
+del servidor, nombre de usuario ni contraseñas. Conserva hasta dos archivos
+de aproximadamente 1 MB. verificacion.txt documenta la prueba local.
+
+DEPENDENCIA
+VirtualDesktopAccessor.dll, de Ciantic (licencia MIT):
+https://github.com/Ciantic/VirtualDesktopAccessor
+Release: 2024-12-16-windows11
+SHA256: 8740C572A1C000E3B87FFEB1E4C397EAE9AF3BD4A2ABDC3BCFFACAB4493F8FF5
+Usa interfaces de escritorios virtuales que pueden requerir actualización
+si una futura actualización de Windows cambia esas interfaces.
+Se incluye la licencia y el código fuente RdpSupervisor.cs.
+ConnectionManager.cs contiene el gestor y el almacenamiento de perfiles.
+SharedResources.cs contiene las opciones de recursos e inicio con Windows.
+conexiones.xml guarda equipo, usuario, configuración y las claves cifradas.
+perfiles\ conserva las plantillas RDP, sin contraseñas.
+Credentials.cs contiene el cifrado, la entrega temporal a Windows y la
+clasificación de fallos para evitar bucles al autenticar.
+
+La primera verificación local comprueba la configuración, el acceso al
+registro de eventos y el movimiento de una ventana de prueba al escritorio 2.
+El estado real de conexión y recuperación se comprueba en supervisor.log.

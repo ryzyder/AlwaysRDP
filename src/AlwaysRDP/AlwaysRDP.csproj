@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="15.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <Configuration Condition="'$(Configuration)' == ''">Debug</Configuration>
+    <Platform Condition="'$(Platform)' == ''">x64</Platform>
+    <ProjectGuid>{8DDB1676-092D-4137-9632-8233E8A8F39D}</ProjectGuid>
+    <OutputType>WinExe</OutputType>
+    <RootNamespace>AlwaysRDP</RootNamespace>
+    <AssemblyName>AlwaysRDP</AssemblyName>
+    <TargetFrameworkVersion>v4.8</TargetFrameworkVersion>
+    <PlatformTarget>x64</PlatformTarget>
+    <Prefer32Bit>false</Prefer32Bit>
+    <StartupObject>Supervisor</StartupObject>
+    <ApplicationIcon>..\..\assets\RDP-Permanente.ico</ApplicationIcon>
+    <OutputPath>..\..\build\$(Configuration)\</OutputPath>
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>pdbonly</DebugType>
+    <Optimize Condition="'$(Configuration)' == 'Release'">true</Optimize>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="System" />
+    <Reference Include="System.Core" />
+    <Reference Include="System.Drawing" />
+    <Reference Include="System.Security" />
+    <Reference Include="System.Windows.Forms" />
+    <Reference Include="System.Xml" />
+    <Reference Include="System.Xml.Linq" />
+    <Compile Include="Branding.cs" />
+    <Compile Include="ConnectionManager.cs" />
+    <Compile Include="Credentials.cs" />
+    <Compile Include="Localization.cs" />
+    <Compile Include="RdpSupervisor.cs" />
+    <Compile Include="SharedResources.cs" />
+    <Content Include="..\..\assets\RDP-Permanente.ico"><Link>RDP-Permanente.ico</Link><CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory></Content>
+    <Content Include="..\..\assets\RDP-Permanente.png"><Link>RDP-Permanente.png</Link><CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory></Content>
+    <Content Include="..\..\vendor\VirtualDesktopAccessor.dll"><Link>VirtualDesktopAccessor.dll</Link><CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory></Content>
+    <Content Include="..\..\third_party\VirtualDesktopAccessor\LICENSE.txt"><Link>LICENSE-VirtualDesktopAccessor.txt</Link><CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory></Content>
+    <Content Include="..\..\LICENSE"><Link>LICENSE</Link><CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory></Content>
+  </ItemGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+</Project>

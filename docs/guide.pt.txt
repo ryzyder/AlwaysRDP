@@ -1,0 +1,43 @@
+AlwaysRDP
+
+Abra AlwaysRDP pelo atalho na área de trabalho. No seletor de idioma no canto
+superior direito, escolha English, Español ou Português. A escolha é salva e
+aplicada imediatamente, sem reiniciar a sessão nem limpar campos em edição.
+O logotipo foi mantido. Seus perfis e senhas criptografadas foram preservados.
+
+CONEXÕES
+Selecione um perfil salvo, crie uma nova conexão ou importe um arquivo .rdp.
+Informe o computador/IP, usuário e senha opcional. Salvar guarda o perfil;
+Conectar abre a conexão na área de trabalho virtual 2, em tela cheia.
+Uma sessão é monitorada por vez. Ver sessão mostra essa área de trabalho.
+Parar interrompe a conexão. Excluir perfil pede confirmação e remove o perfil
+e sua senha salva; se estiver ativo, a sessão será interrompida. Isso não
+exclui a conta do Windows nem arquivos do computador remoto.
+
+SENHAS
+As senhas são criptografadas com o DPAPI do Windows para seu usuário atual.
+Deixar o campo vazio mantém a senha já salva no perfil. Limpar remove essa
+senha ao salvar. Se mudar o computador ou usuário, informe a senha novamente.
+O aplicativo fornece temporariamente a credencial selecionada ao Windows e
+restaura a credencial anterior após o acesso ou o fechamento da conexão.
+Senhas não são gravadas em texto simples nos perfis, logs ou argumentos.
+
+RECURSOS E INICIALIZAÇÃO
+Somente a área de transferência fica habilitada por padrão, inclusive em
+perfis importados. Unidades, impressoras e os demais recursos são opcionais
+e salvos por perfil. Salve e clique em Conectar para aplicar os novos recursos.
+O servidor remoto pode limitar quais redirecionamentos estão disponíveis.
+A opção de inicialização abre AlwaysRDP em segundo plano ao entrar no Windows.
+Retoma a última conexão selecionada se você não a deixou interrompida.
+Fechar a janela do gerenciador mantém o monitoramento na bandeja do sistema.
+O atalho Stop AlwaysRDP encerra o aplicativo e fecha sua conexão.
+
+RECONEXÃO
+O aplicativo monitora seu próprio processo mstsc e os eventos RDP do Windows.
+Permite que transições internas terminem antes de considerar uma desconexão
+definitiva. Após uma falha real de rede ou o fim do processo, tenta novamente.
+Uma falha de acesso pausa as tentativas e mantém a janela do Windows disponível.
+
+As notas técnicas em espanhol estão em LEEME.txt. Os dados continuam na pasta
+existente do aplicativo por compatibilidade. Faça backup da pasta inteira;
+as senhas criptografadas dependem do seu usuário do Windows.

@@ -9,7 +9,7 @@ Project owner and maintainer: **[ryzyder](https://github.com/ryzyder)**. Copyrig
 ## Features
 
 - Multiple saved connection profiles, including separate usernames and optional encrypted passwords.
-- Full-screen sessions on Windows virtual Desktop 2.
+- Full-screen sessions with an included Desktop 2 helper that runs in the background by default.
 - Automatic recovery after a real client exit or network interruption.
 - A grace period for intermediate RDP events, preventing premature client termination during sign-in.
 - Optional Windows startup and per-profile resource sharing. **Clipboard only** is the default.
@@ -37,6 +37,8 @@ From PowerShell in the repository root:
 
 The script compiles the app with the Windows .NET Framework compiler, verifies the native dependency's SHA-256, copies runtime assets and notices, and runs synthetic regression tests. Output: `build/Release/AlwaysRDP.exe`.
 
+For the standalone portable build, run `./build-portable.ps1 -Test`. It includes the Desktop 2 helper and its pinned native dependency; Windows startup remains a Store-only capability.
+
 You can also open `AlwaysRDP.sln` in Visual Studio with the .NET desktop development workload and .NET Framework 4.8 targeting pack. Run `build.ps1` first to obtain the native dependency.
 
 Tests do not connect to real RDP servers. Credential tests use randomly generated `.invalid` destinations and temporary synthetic Windows Credential Manager entries, then restore or remove them.
@@ -61,7 +63,7 @@ The application retains some legacy internal filenames and the original DPAPI en
 
 ## Ownership, license and provenance
 
-This repository is **proprietary**, not an open-source release. See [LICENSE](LICENSE), [AUTHORS.md](AUTHORS.md), and [COPYRIGHT.md](COPYRIGHT.md). Keep the repository private unless the owner deliberately changes the distribution policy.
+This repository is publicly visible for transparency, issue reporting and community feedback. It is **source-available, not open source**: the project-owned portions remain under the proprietary terms in [LICENSE](LICENSE). See [AUTHORS.md](AUTHORS.md) and [COPYRIGHT.md](COPYRIGHT.md) for ownership, provenance and third-party notices. Public visibility does not grant permission to redistribute, sell, repackage or create derivative works.
 
 Git history and the source manifest document this repository version; they are not an official copyright registration or a legal determination of authorship. The project was developed using AI-assisted tooling under the maintainer's direction. See the authorship notes for the distinction between project ownership and legal copyright eligibility.
 

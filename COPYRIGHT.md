@@ -2,7 +2,7 @@
 
 Copyright © 2026 ryzyder for eligible project-owned material. All rights reserved, with the exceptions in [LICENSE](LICENSE).
 
-The repository is intended to remain private. The history records this project's changes and the account associated with them; neither a Git commit, this notice nor repository visibility constitutes official registration or guarantees legal ownership.
+The repository is published as source-available material. The history records this project's changes and the account associated with them; neither a Git commit, this notice nor repository visibility constitutes official registration or guarantees legal ownership. The public source remains subject to the proprietary terms in [LICENSE](LICENSE).
 
 The project uses AI-assisted development. Legal protection for AI-assisted works varies by jurisdiction and by the human contribution. This repository makes no blanket claim that every generated element qualifies for copyright.
 

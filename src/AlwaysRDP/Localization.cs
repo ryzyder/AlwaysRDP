@@ -1,4 +1,4 @@
-// Copyright (c) 2026 ryzyder. All rights reserved.
+﻿// Copyright (c) 2026 ryzyder. All rights reserved.
 // Project-owned portions are subject to the root LICENSE; third-party notices remain applicable.
 using System;
 using System.IO;
@@ -31,7 +31,7 @@ internal static class L {
         new[]{"Se quitará la contraseña del perfil al guardar.","The profile password will be removed when you save.","A senha do perfil será removida ao salvar."},
         new[]{"Contraseña guardada y cifrada por Windows. Vacío: conservarla.","Password saved and encrypted by Windows. Leave blank to keep it.","Senha salva e criptografada pelo Windows. Deixe vazio para mantê-la."},
         new[]{"Se guarda cifrada para tu usuario de Windows. Vacío: usar las credenciales de Windows.","Encrypted for your Windows account. Leave blank to use Windows credentials.","Criptografada para seu usuário do Windows. Vazio: usar as credenciais do Windows."},
-        new[]{"Pantalla completa  ·  Escritorio 2  ·  {0}","Full screen  ·  Desktop 2  ·  {0}","Tela cheia  ·  Área de trabalho 2  ·  {0}"},
+        new[]{"Pantalla completa  ·  {0}","Full screen  ·  {0}","Tela cheia  ·  {0}"},
         new[]{"RECURSOS DE ESTA CONEXIÓN","SHARING FOR THIS CONNECTION","RECURSOS DESTA CONEXÃO"},
         new[]{"Elige qué compartir con el equipo remoto. Pulsa Guardar o Conectar para aplicar.","Choose what to share with the remote computer. Click Save or Connect to apply.","Escolha o que compartilhar com o computador remoto. Clique em Salvar ou Conectar."},
         new[]{"Portapapeles (copiar y pegar)","Clipboard (copy and paste)","Área de transferência (copiar e colar)"},
@@ -77,16 +77,16 @@ internal static class L {
         new[]{"Iniciando","Starting","Iniciando"},
         new[]{"detenida","Stopped","Parada"},
         new[]{"sin perfiles","No profiles","Sem perfis"},
-        new[]{"conectado en escritorio 2","Connected on Desktop 2","Conectado na área de trabalho 2"},
-        new[]{"autenticando en escritorio 2","Signing in on Desktop 2","Autenticando na área de trabalho 2"},
+        new[]{"conectado","Connected","Conectado"},
+        new[]{"autenticando","Signing in","Autenticando"},
         new[]{"acceso pendiente ({0})","Sign-in pending ({0})","Acesso pendente ({0})"},
         new[]{"error; revisa la conexión","Error; check connection","Erro; verifique a conexão"},
-        new[]{"esperando credenciales en escritorio 2","Credentials needed on Desktop 2","Credenciais necessárias na área de trabalho 2"},
-        new[]{"conectando en escritorio 2","Connecting on Desktop 2","Conectando na área de trabalho 2"},
+        new[]{"esperando credenciales","Credentials needed","Credenciais necessárias"},
+        new[]{"conectando","Connecting","Conectando"},
         new[]{"revisa usuario y contraseña","Check username and password","Verifique o usuário e a senha"},
         new[]{"reintento en {0} segundos","Retrying in {0} seconds","Nova tentativa em {0} segundos"},
         new[]{"Conexiones…","Connections…","Conexões…"},
-        new[]{"Ver sesión en escritorio 2","View session on Desktop 2","Ver sessão na área de trabalho 2"},
+        new[]{"Ver sesión","View session","Ver sessão"},
         new[]{"Detener sesión","Stop session","Parar sessão"},
         new[]{"Detener y cerrar esta conexión","Stop and exit AlwaysRDP","Parar e sair do AlwaysRDP"},
         new[]{"Agrega una conexión en AlwaysRDP.","Add a connection in AlwaysRDP.","Adicione uma conexão no AlwaysRDP."},
@@ -99,7 +99,18 @@ internal static class L {
         new[]{"No se puede abrir la contraseña guardada. Vuelve a escribirla y guarda la conexión.","Cannot decrypt the saved password. Enter it again and save the connection.","Não é possível descriptografar a senha salva. Digite-a novamente e salve a conexão."},
         new[]{"La credencial de Windows tiene atributos especiales. Usa el diálogo de Windows para esta conexión.","This Windows credential has special attributes. Use the Windows sign-in dialog.","Esta credencial do Windows possui atributos especiais. Use a janela de acesso do Windows."},
         new[]{"Escribe también el usuario de esta contraseña.","Also enter the username for this password.","Informe também o usuário desta senha."},
-        new[]{"No se pudo guardar el idioma","Could not save language","Não foi possível salvar o idioma"}
+        new[]{"No se pudo guardar el idioma","Could not save language","Não foi possível salvar o idioma"},
+        new[]{"Windows no respondió al consultar el inicio automático.","Windows did not respond when checking startup settings.","O Windows não respondeu ao consultar a inicialização."},
+        new[]{"Preferencias de RDP de Windows","Windows RDP preferences","Preferências de RDP do Windows"},
+        new[]{"Para aplicar la conexión y los recursos elegidos, AlwaysRDP actualizará los valores predeterminados de Conexión a Escritorio remoto de Windows. Esto puede afectar a otras conexiones que abras con mstsc sin un archivo RDP propio. Guardaremos una copia previa de la configuración. ¿Quieres permitirlo?","To apply your connection and sharing choices, AlwaysRDP will update Windows Remote Desktop Connection defaults. This can affect other connections you open with mstsc without their own RDP file. A copy of the previous settings will be kept. Do you want to allow this?","Para aplicar a conexão e os recursos escolhidos, AlwaysRDP atualizará os padrões da Conexão de Área de Trabalho Remota do Windows. Isso pode afetar outras conexões que você abrir com mstsc sem um arquivo RDP próprio. Uma cópia das configurações anteriores será mantida. Deseja permitir?"},
+        new[]{"Abre AlwaysRDP y autoriza las preferencias de RDP antes de conectar.","Open AlwaysRDP and approve the RDP preferences before connecting.","Abra AlwaysRDP e autorize as preferências de RDP antes de conectar."},
+        new[]{"Habilita AlwaysRDP en Configuración de Windows > Aplicaciones > Inicio. Windows mantiene el control de esta opción.","Enable AlwaysRDP in Windows Settings > Apps > Startup. Windows remains in control of this setting.","Ative AlwaysRDP em Configurações do Windows > Aplicativos > Inicialização. O Windows mantém o controle desta opção."},
+        new[]{"ESCRITORIO VIRTUAL · TODAS LAS CONEXIONES","VIRTUAL DESKTOP · ALL CONNECTIONS","ÁREA DE TRABALHO VIRTUAL · TODAS AS CONEXÕES"},
+        new[]{"Escritorio 2","Desktop 2","Área de trabalho 2"},
+        new[]{"Mover sesiones a Escritorio 2","Move sessions to Desktop 2","Mover sessões para a Área de trabalho 2"},
+        new[]{"Activo por defecto. Se inicia en segundo plano y mueve cada sesión nueva a Escritorio 2.","Enabled by default. It starts in the background and moves each new session to Desktop 2.","Ativo por padrão. Inicia em segundo plano e move cada nova sessão para a Área de trabalho 2."},
+        new[]{"¿Quieres que AlwaysRDP se inicie con Windows y permanezca en la bandeja del sistema?","Do you want AlwaysRDP to start with Windows and remain in the system tray?","Deseja que o AlwaysRDP inicie com o Windows e permaneça na bandeja do sistema?"},
+        new[]{"Se inicia minimizado en la bandeja y recupera la última conexión si no la dejaste detenida.","It starts minimized in the system tray and resumes the last connection unless you stopped it.","Inicia minimizado na bandeja do sistema e retoma a última conexão, caso você não a tenha interrompido."}
     };
     internal static IEnumerable<string> Keys {get{return Rows.Select(r=>r[0]);}}
     internal static string T(string text) {

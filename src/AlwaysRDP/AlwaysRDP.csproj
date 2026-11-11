@@ -16,6 +16,7 @@
     <DebugSymbols>true</DebugSymbols>
     <DebugType>pdbonly</DebugType>
     <Optimize Condition="'$(Configuration)' == 'Release'">true</Optimize>
+    <DefineConstants>STORE_BUILD</DefineConstants>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="System" />
@@ -25,16 +26,22 @@
     <Reference Include="System.Windows.Forms" />
     <Reference Include="System.Xml" />
     <Reference Include="System.Xml.Linq" />
+    <Reference Include="Windows.ApplicationModel"><HintPath>$(WINDIR)\System32\WinMetadata\Windows.ApplicationModel.winmd</HintPath><Private>false</Private></Reference>
+    <Reference Include="Windows.Foundation"><HintPath>$(WINDIR)\System32\WinMetadata\Windows.Foundation.winmd</HintPath><Private>false</Private></Reference>
+    <Reference Include="System.Runtime"><HintPath>$(WINDIR)\Microsoft.NET\Framework64\v4.0.30319\System.Runtime.dll</HintPath><Private>false</Private></Reference>
     <Compile Include="Branding.cs" />
+    <Compile Include="AppPaths.cs" />
+    <Compile Include="PackagedStartup.cs" />
+    <Compile Include="RdpPreferencesConsent.cs" />
     <Compile Include="ConnectionManager.cs" />
     <Compile Include="Credentials.cs" />
+    <Compile Include="Desktop2Controller.cs" />
+    <Compile Include="StartupOnboarding.cs" />
     <Compile Include="Localization.cs" />
     <Compile Include="RdpSupervisor.cs" />
     <Compile Include="SharedResources.cs" />
     <Content Include="..\..\assets\RDP-Permanente.ico"><Link>RDP-Permanente.ico</Link><CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory></Content>
     <Content Include="..\..\assets\RDP-Permanente.png"><Link>RDP-Permanente.png</Link><CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory></Content>
-    <Content Include="..\..\vendor\VirtualDesktopAccessor.dll"><Link>VirtualDesktopAccessor.dll</Link><CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory></Content>
-    <Content Include="..\..\third_party\VirtualDesktopAccessor\LICENSE.txt"><Link>LICENSE-VirtualDesktopAccessor.txt</Link><CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory></Content>
     <Content Include="..\..\LICENSE"><Link>LICENSE</Link><CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory></Content>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

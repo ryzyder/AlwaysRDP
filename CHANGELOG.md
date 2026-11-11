@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.2.0
+
+- Adds AlwaysRDP Desktop 2 to the Store package.
+- Starts the Desktop 2 helper in the background by default.
+- Adds the Desktop 2 switch to Sharing & startup.
+
 ## 1.0.0 — 2026-11-10
 
 First source repository packaging of AlwaysRDP, including:

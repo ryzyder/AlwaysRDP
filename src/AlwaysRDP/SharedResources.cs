@@ -61,7 +61,12 @@ internal static class StartupSettings {
     internal static string ShortcutPath {get{return Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Startup),"AlwaysRDP.lnk");}}
     static object Read(object obj,string property) {return obj.GetType().InvokeMember(property,BindingFlags.GetProperty,null,obj,null);}
     static void Write(object obj,string property,object value) {obj.GetType().InvokeMember(property,BindingFlags.SetProperty,null,obj,new[]{value});}
-    internal static bool Enabled {get {return IsEnabled(ShortcutPath,System.Windows.Forms.Application.ExecutablePath);}}
+    internal static bool Enabled {get {
+#if STORE_BUILD
+        if(AppPaths.IsPackaged)return PackagedStartup.Enabled;
+#endif
+        return IsEnabled(ShortcutPath,System.Windows.Forms.Application.ExecutablePath);
+    }}
     internal static bool IsEnabled(string path,string executable) {
         if(!File.Exists(path))return false;
         object shell=null,link=null;
@@ -71,7 +76,12 @@ internal static class StartupSettings {
             return string.Equals(Path.GetFullPath((string)Read(link,"TargetPath")),Path.GetFullPath(executable),StringComparison.OrdinalIgnoreCase);
         } finally {if(link!=null)Marshal.FinalReleaseComObject(link);if(shell!=null)Marshal.FinalReleaseComObject(shell);}
     }
-    internal static void Set(bool enabled) {SetAt(ShortcutPath,System.Windows.Forms.Application.ExecutablePath,enabled);}
+    internal static void Set(bool enabled) {
+#if STORE_BUILD
+        if(AppPaths.IsPackaged){PackagedStartup.Set(enabled);return;}
+#endif
+        SetAt(ShortcutPath,System.Windows.Forms.Application.ExecutablePath,enabled);
+    }
     internal static void SetAt(string path,string executable,bool enabled) {
         if(File.Exists(path) && !IsEnabled(path,executable))throw new InvalidOperationException(L.T("Ya existe un acceso de inicio con ese nombre para otra aplicación."));
         if(!enabled) {if(File.Exists(path))File.Delete(path);return;}

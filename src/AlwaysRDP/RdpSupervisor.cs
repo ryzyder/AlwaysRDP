@@ -1,4 +1,4 @@
-// Copyright (c) 2026 ryzyder. All rights reserved.
+﻿// Copyright (c) 2026 ryzyder. All rights reserved.
 // Project-owned portions are subject to the root LICENSE; third-party notices remain applicable.
 using System;
 using System.IO;
@@ -13,12 +13,6 @@ using System.Collections.Generic;
 using System.Windows.Forms;
 
 internal static class Native {
-    [DllImport("VirtualDesktopAccessor.dll")] internal static extern int GetDesktopCount();
-    [DllImport("VirtualDesktopAccessor.dll")] internal static extern int GetCurrentDesktopNumber();
-    [DllImport("VirtualDesktopAccessor.dll")] internal static extern int GetWindowDesktopNumber(IntPtr h);
-    [DllImport("VirtualDesktopAccessor.dll")] internal static extern int MoveWindowToDesktopNumber(IntPtr h, int n);
-    [DllImport("VirtualDesktopAccessor.dll")] internal static extern int CreateDesktop();
-    [DllImport("VirtualDesktopAccessor.dll")] internal static extern int GoToDesktopNumber(int n);
     internal delegate bool EnumProc(IntPtr h, IntPtr p);
     internal delegate void EventProc(IntPtr hook, uint e, IntPtr h, int obj, int child, uint thread, uint time);
     [DllImport("user32.dll")] internal static extern bool EnumWindows(EnumProc cb, IntPtr p);
@@ -48,14 +42,15 @@ internal sealed class ProbeForm : Form {
 }
 
 internal sealed class Supervisor : ApplicationContext {
-    const string EventName = "Local\\OscarRdpSupervisorStopV1";
-    const string OpenEventName = "Local\\OscarRdpSupervisorOpenV1";
-    const string ManageEventName = "Local\\OscarRdpSupervisorManageV1";
-    const string MutexName = "Local\\OscarRdpSupervisorV1";
+    const string EventName = "Local\\AlwaysRDPStoreStopV1";
+    const string OpenEventName = "Local\\AlwaysRDPStoreOpenV1";
+    const string ManageEventName = "Local\\AlwaysRDPStoreManageV1";
+    const string MutexName = "Local\\AlwaysRDPStoreV1";
     internal static readonly string Folder = AppDomain.CurrentDomain.BaseDirectory;
+    internal static readonly string DataFolder=AppPaths.DataFolder;
     static readonly string Source = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.DesktopDirectory), "Administrator.rdp");
-    static readonly string Rdp = Path.Combine(Folder, "Administrator-supervisado.rdp");
-    static readonly string LogFile = Path.Combine(Folder, "supervisor.log");
+    static readonly string Rdp = Path.Combine(DataFolder, "Administrator-supervisado.rdp");
+    static readonly string LogFile = Path.Combine(DataFolder, "supervisor.log");
     static readonly object LogLock = new object();
     static ProfileStore Profiles;
     internal static readonly Icon AppIcon=new Icon(Path.Combine(Folder,"RDP-Permanente.ico"));
@@ -68,15 +63,10 @@ internal sealed class Supervisor : ApplicationContext {
     EventLogWatcher watcher;
     Process client;
     int clientPid, failures;
-    bool stopping, connected, moving, awaitingUser;
-    bool allowSessionActivation;
+    bool stopping, connected, awaitingUser;
     readonly DisconnectGuard disconnect=new DisconnectGuard();
     CredentialLease credentialLease;
     DateTime launched, nextLaunch = DateTime.UtcNow, connectedAt;
-    IntPtr lastForeground, foregroundHook, showHook;
-    int lastDesktop;
-    readonly Native.EventProc hookCallback;
-    readonly HashSet<IntPtr> moved = new HashSet<IntPtr>();
     ConnectionManager manager;
     string stateText=L.T("Iniciando"), runningKey="";
     object[] stateArguments=new object[0];
@@ -128,7 +118,7 @@ internal sealed class Supervisor : ApplicationContext {
         if(string.IsNullOrWhiteSpace(address) || address.Any(c=>char.IsWhiteSpace(c) || c=='\"' || c=='\0'))
             throw new InvalidOperationException(L.T("La dirección de Administrator.rdp no es válida para una conexión directa."));
         string defaults=Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments),"Default.rdp");
-        string backup=Path.Combine(Folder,"Default-anterior.rdp.bak");
+        string backup=Path.Combine(DataFolder,"Default-anterior.rdp.bak");
         if(File.Exists(defaults) && !File.Exists(backup)) File.Copy(defaults,backup);
         // mstsc /v reads the user's default preferences. No explicit RDP file is opened.
         // FileMode.Create fails for an existing hidden file on Windows. Open it
@@ -142,6 +132,7 @@ internal sealed class Supervisor : ApplicationContext {
         return address;
     }
     internal Supervisor(bool foregroundRequested) {
+        if(AppPaths.IsPackaged)Desktop2Controller.Start();
         dispatcher = new Control(); var unused = dispatcher.Handle;
         stop = new EventWaitHandle(false, EventResetMode.ManualReset, EventName); stop.Reset();
         open = new EventWaitHandle(false, EventResetMode.AutoReset, OpenEventName);
@@ -150,16 +141,12 @@ internal sealed class Supervisor : ApplicationContext {
         tray = new NotifyIcon { Icon=AppIcon, Visible=true, Text="AlwaysRDP" };
         var menu = new ContextMenuStrip();
         menu.Items.Add(L.T("Conexiones…"), null, delegate { ShowManager(); });
-        menu.Items.Add(L.T("Ver sesión en escritorio 2"), null, delegate { ShowSession(); });
+        menu.Items.Add(L.T("Ver sesión"), null, delegate { ShowSession(); });
         menu.Items.Add(L.T("Detener sesión"), null, delegate { PauseSession(); });
         menu.Items.Add(L.T("Detener y cerrar esta conexión"), null, delegate { Shutdown(); });
         tray.ContextMenuStrip=menu;
         L.Changed+=RefreshLanguage;
         tray.DoubleClick += delegate { ShowManager(); };
-        lastForeground=Native.GetForegroundWindow(); lastDesktop=Native.GetCurrentDesktopNumber();
-        hookCallback=WindowEvent;
-        foregroundHook=Native.SetWinEventHook(3,3,IntPtr.Zero,hookCallback,0,0,0);
-        showHook=Native.SetWinEventHook(0x8002,0x8002,IntPtr.Zero,hookCallback,0,0,0);
         string query="*[System[(EventID=1025 or EventID=1026 or EventID=1027)]]";
         watcher=new EventLogWatcher(new EventLogQuery("Microsoft-Windows-TerminalServices-RDPClient/Operational",PathType.LogName,query));
         watcher.EventRecordWritten += Record;
@@ -173,13 +160,15 @@ internal sealed class Supervisor : ApplicationContext {
     void RefreshLanguage() {string text="AlwaysRDP: "+StateText;tray.Text=text.Substring(0,Math.Min(63,text.Length));foreach(ToolStripItem item in tray.ContextMenuStrip.Items)L.Apply(item);}
     void ShowManager() {
         if(manager==null || manager.IsDisposed) manager=new ConnectionManager(this,Profiles);
-        int desktop=Native.GetCurrentDesktopNumber();
         manager.Show();
-        Native.MoveWindowToDesktopNumber(manager.Handle,desktop);
         if(manager.WindowState==FormWindowState.Minimized) manager.WindowState=FormWindowState.Normal;
         manager.Activate();
+        StartupOnboarding.AskOnce(manager);
     }
     internal void ConnectProfile(ConnectionProfile profile) {
+#if STORE_BUILD
+        if(AppPaths.IsPackaged && !RdpPreferencesConsent.Request(DataFolder,manager))return;
+#endif
         bool reuse=connected && client!=null && !client.HasExited && runningKey==profile.Key;
         Profiles.ActiveId=profile.Id; Profiles.Enabled=true; Profiles.Save(); failures=0;
         if(!reuse) CloseClient();
@@ -187,11 +176,13 @@ internal sealed class Supervisor : ApplicationContext {
     }
     internal void ShowSession() {
         if(Profiles.Active==null) { ShowManager(); return; }
-        if(Native.GetDesktopCount()<2) Native.CreateDesktop();
-        Native.GoToDesktopNumber(1);
+#if STORE_BUILD
+        if(AppPaths.IsPackaged && !RdpPreferencesConsent.Request(DataFolder,manager))return;
+#endif
         if(client==null || client.HasExited) {
             CloseClient(); Profiles.Enabled=true; Profiles.Save(); failures=0; nextLaunch=DateTime.UtcNow; Launch(true);
         }
+        if(client==null || client.HasExited)return;
         var window=client.MainWindowHandle;
         if(window!=IntPtr.Zero) { if(Native.IsIconic(window)) Native.ShowWindow(window,9); Native.SetForegroundWindow(window); }
     }
@@ -217,43 +208,16 @@ internal sealed class Supervisor : ApplicationContext {
                     connected=true; connectedAt=DateTime.UtcNow;
                     if(awaitingUser) {Profiles.Enabled=true;Profiles.Save();awaitingUser=false;}
                     failures=0;ReleaseCredential();
-                    Status(L.T("conectado en escritorio 2")); Log("Conexión establecida. PID="+clientPid);
+                    Status(L.T("conectado")); Log("Conexión establecida. PID="+clientPid);
                 } else if(id==1025) {
                     disconnect.Progress();
-                    if(!connected)Status(L.T("autenticando en escritorio 2"));
+                    if(!connected)Status(L.T("autenticando"));
                 } else if(id==1026) {
                     Log("Desconexión detectada. Motivo="+reason+". PID="+clientPid);
                     int code;int.TryParse(reason,out code);disconnect.Disconnected(code,DateTime.UtcNow);
                 }
             }); } catch(InvalidOperationException) { }
         }
-    }
-    void WindowEvent(IntPtr hook,uint evt,IntPtr h,int obj,int child,uint thread,uint time) {
-        if(stopping || moving || h==IntPtr.Zero || obj!=0 || child!=0) return;
-        uint pid; Native.GetWindowThreadProcessId(h,out pid);
-        if(pid==(uint)clientPid && clientPid!=0) {
-            if(Native.GetAncestor(h,2)==h) Move(h,evt==3);
-        } else if(evt==3) {
-            int desktop=Native.GetWindowDesktopNumber(h);
-            if(desktop>=0) { lastForeground=h; lastDesktop=desktop; }
-        }
-    }
-    void Move(IntPtr h,bool foreground) {
-        moving=true;
-        try {
-            bool justMoved=false;
-            if(!moved.Contains(h) || Native.GetWindowDesktopNumber(h)!=1) {
-                int result=Native.MoveWindowToDesktopNumber(h,1);
-                if(result<0) return;
-                moved.Add(h);
-                justMoved=true;
-            }
-            bool backgroundConnecting=!allowSessionActivation && DateTime.UtcNow-launched<TimeSpan.FromSeconds(15);
-            if((justMoved || backgroundConnecting) && foreground && lastDesktop!=1 && lastForeground!=IntPtr.Zero && Native.IsWindow(lastForeground)) {
-                if(Native.GetCurrentDesktopNumber()!=lastDesktop) Native.GoToDesktopNumber(lastDesktop);
-                Native.SetForegroundWindow(lastForeground);
-            }
-        } finally { moving=false; }
     }
     void Tick(object sender, EventArgs e) {
         try {
@@ -274,11 +238,6 @@ internal sealed class Supervisor : ApplicationContext {
                     } else Restart();
                     return;
                 }
-                Native.EnumWindows(delegate(IntPtr h,IntPtr p) {
-                    uint pid; Native.GetWindowThreadProcessId(h,out pid);
-                    if(pid==(uint)clientPid) Move(h,Native.GetForegroundWindow()==h);
-                    return true;
-                },IntPtr.Zero);
                 if(connected && DateTime.UtcNow-connectedAt>TimeSpan.FromMinutes(2)) failures=0;
                 return;
             }
@@ -290,18 +249,16 @@ internal sealed class Supervisor : ApplicationContext {
         }
     }
     void Launch(bool foreground=false) {
-        int count=Native.GetDesktopCount();
-        if(count<1) throw new InvalidOperationException(L.T("No se puede acceder a los escritorios virtuales."));
-        if(count<2 && Native.CreateDesktop()<0) throw new InvalidOperationException(L.T("No se pudo crear el escritorio 2."));
+#if STORE_BUILD
+        if(AppPaths.IsPackaged && !RdpPreferencesConsent.IsApproved(DataFolder))throw new InvalidOperationException(L.T("Abre AlwaysRDP y autoriza las preferencias de RDP antes de conectar."));
+#endif
         string address=PrepareDirectConnection();
         bool prompt=!Profiles.Active.HasPassword && !CredentialLease.HasMatchingUser(Profiles.Active);
         credentialLease=CredentialLease.Install(Profiles.Active);
-        allowSessionActivation=foreground;
         runningKey=Profiles.Active==null ? "" : Profiles.Active.Key;
-        moved.Clear(); connected=false;awaitingUser=false;disconnect.Progress();
-        lastForeground=Native.GetForegroundWindow(); lastDesktop=Native.GetCurrentDesktopNumber();
+        connected=false;awaitingUser=false;disconnect.Progress();
         var startup=new Native.Startup(); startup.cb=Marshal.SizeOf(typeof(Native.Startup));
-        startup.flags=1; startup.show=4; // SW_SHOWNOACTIVATE
+        startup.flags=1; startup.show=(short)(foreground?1:4); // SW_SHOWNORMAL or SW_SHOWNOACTIVATE
         var executable=Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.System),"mstsc.exe");
         var command=new StringBuilder("\""+executable+"\" /v:\""+address+"\" /f"+(prompt?" /prompt":""));
         Native.ProcInfo info;
@@ -311,7 +268,7 @@ internal sealed class Supervisor : ApplicationContext {
         clientPid=(int)info.pid;
         Native.CloseHandle(info.process); Native.CloseHandle(info.thread);
         client=Process.GetProcessById(clientPid);
-        Status(prompt?L.T("esperando credenciales en escritorio 2"):L.T("conectando en escritorio 2")); Log("Cliente iniciado directamente al servidor, a pantalla completa. "+Profiles.Active.Resources.Summary+". PID="+clientPid);
+        Status(prompt?L.T("esperando credenciales"):L.T("conectando")); Log("Cliente iniciado directamente al servidor, a pantalla completa. "+Profiles.Active.Resources.Summary+". PID="+clientPid);
     }
     void ReleaseCredential() {
         var lease=credentialLease;credentialLease=null;
@@ -339,13 +296,12 @@ internal sealed class Supervisor : ApplicationContext {
     void Shutdown() {
         if(stopping) return; stopping=true;
         timer.Stop(); watcher.Enabled=false; watcher.Dispose();
-        Native.UnhookWinEvent(foregroundHook); Native.UnhookWinEvent(showHook);
         CloseClient(); if(manager!=null) manager.Dispose();L.Changed-=RefreshLanguage; tray.Visible=false; tray.Dispose(); stop.Dispose(); open.Dispose(); manage.Dispose(); dispatcher.Dispose();
         Log("Supervisor detenido por el usuario."); ExitThread();
     }
     [STAThread] internal static int Main(string[] args) {
         Directory.SetCurrentDirectory(Folder);
-        L.Initialize(Folder);
+        L.Initialize(DataFolder);
         if(args.Contains("/stop")) {
             try { using(var e=EventWaitHandle.OpenExisting(EventName)) e.Set(); } catch(WaitHandleCannotBeOpenedException) { }
             return 0;
@@ -353,27 +309,12 @@ internal sealed class Supervisor : ApplicationContext {
         try {
             Native.SetProcessDPIAware();
             if(args.Contains("/check")) {
-                Profiles=new ProfileStore(Folder,Source);
+                Profiles=new ProfileStore(DataFolder,AppPaths.IsPackaged?"":Source);
                 PrepareRdp();
-                int count=Native.GetDesktopCount();
-                if(count<2) throw new InvalidOperationException("Se necesitan dos escritorios virtuales.");
-                using(var form=new ProbeForm { Text="Verificación de RDP", Opacity=0.01, ShowInTaskbar=false, Width=100, Height=100 }) {
-                    form.Show(); Application.DoEvents();
-                    var h=form.Handle;
-                    int result=-1;
-                    for(int attempt=0;attempt<20;attempt++) {
-                        Application.DoEvents(); Thread.Sleep(50);
-                        result=Native.MoveWindowToDesktopNumber(h,1);
-                        if(result>=0 && Native.GetWindowDesktopNumber(h)==1) break;
-                    }
-                    if(result<0 || Native.GetWindowDesktopNumber(h)!=1)
-                        throw new InvalidOperationException("No se pudo verificar el escritorio 2.");
-                    form.Close();
-                }
                 using(var session=new EventLogSession()) {
                     var info=session.GetLogInformation("Microsoft-Windows-TerminalServices-RDPClient/Operational",PathType.LogName);
                 }
-                File.WriteAllText(Path.Combine(Folder,"verificacion.txt"),"OK: cliente de Windows, configuración, registro de eventos y movimiento al escritorio 2 verificados.\r\nNo se prueba aquí la conexión ni las credenciales.\r\n");
+                File.WriteAllText(Path.Combine(DataFolder,"verificacion.txt"),"OK: cliente de Windows, configuración y registro de eventos verificados. Ubicación del escritorio virtual manual.\r\nNo se prueba aquí la conexión ni las credenciales.\r\n");
                 Environment.Exit(0); return 0;
             }
             bool first;
@@ -386,14 +327,14 @@ internal sealed class Supervisor : ApplicationContext {
                 }
                 Application.EnableVisualStyles();
                 Application.SetCompatibleTextRenderingDefault(false);
-                Profiles=new ProfileStore(Folder,Source);
+                Profiles=new ProfileStore(DataFolder,AppPaths.IsPackaged?"":Source);
                 Application.Run(new Supervisor(!args.Contains("/background")));
                 mutex.ReleaseMutex();
             }
             Environment.Exit(0); return 0;
         } catch(Exception ex) {
             Log("Fallo de inicio: "+ex.GetType().Name+" "+ex.Message);
-            File.WriteAllText(Path.Combine(Folder,"error.txt"),ex.Message);
+            File.WriteAllText(Path.Combine(DataFolder,"error.txt"),ex.Message);
             Environment.Exit(1); return 1;
         }
     }

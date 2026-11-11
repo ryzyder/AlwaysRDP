@@ -4,8 +4,18 @@ using System.Linq;
 internal static class ProfileTests {
     static void Require(bool condition,string message) { if(!condition) throw new Exception(message); }
     static int Main() {
+        foreach(var method in typeof(Native).GetMethods(System.Reflection.BindingFlags.NonPublic|System.Reflection.BindingFlags.Static)) {
+            var imports=method.GetCustomAttributes(typeof(System.Runtime.InteropServices.DllImportAttribute),false);
+            foreach(System.Runtime.InteropServices.DllImportAttribute import in imports)
+                Require(import.Value.Equals("user32.dll",StringComparison.OrdinalIgnoreCase)||import.Value.Equals("kernel32.dll",StringComparison.OrdinalIgnoreCase),"Store: usar solo las bibliotecas públicas de Windows para las ventanas");
+        }
         string root=Path.Combine(AppDomain.CurrentDomain.BaseDirectory,"profile-tests-"+Guid.NewGuid().ToString("N"));
         Directory.CreateDirectory(root);
+        var freshStore=new ProfileStore(Path.Combine(root,"empty"),"");
+        Require(!freshStore.Enabled,"Store vacío: guardar el primer perfil no debe iniciar una conexión");
+        freshStore.Items.Add(new ConnectionProfile {Id="first",Name="Demo",Address="first.example.invalid",User="DEMO\\user",Template=""});
+        freshStore.Save();
+        Require(!new ProfileStore(Path.Combine(root,"empty"),"").Enabled,"Primer perfil guardado: supervisión detenida hasta pulsar Conectar");
         string fixture=Path.Combine(root,"Conexión de prueba.rdp");
         File.WriteAllLines(fixture,new[]{"full address:s:equipo-prueba.invalid:3390","username:s:DOMINIO\\usuario","password 51:b:valor-ficticio","signature:s:valor-ficticio","redirectprinters:i:1"});
         var store=new ProfileStore(root,fixture);
@@ -100,6 +110,12 @@ internal static class ProfileTests {
         }
         L.Initialize(languageFolder);Require(L.Language=="pt","Recordar idioma al reiniciar");
         L.Change("es");
+        Require(AppPaths.ResolveDataFolder(true,root,"installation")==Path.Combine(root,"AlwaysRDP"),"Datos del paquete fuera de su carpeta de instalación");
+        Require(AppPaths.ResolveDataFolder(false,root,"portable")=="portable","Compatibilidad con la versión portátil");
+        var consentFolder=Path.Combine(root,"consent");
+        Require(!RdpPreferencesConsent.IsApproved(consentFolder),"No modificar RDP sin autorización inicial");
+        RdpPreferencesConsent.Accept(consentFolder);
+        Require(RdpPreferencesConsent.IsApproved(consentFolder),"Recordar autorización sin afectar el idioma");
         Console.WriteLine("OK: perfiles, cifrado, recuperación, eliminación, recursos, inicio y tres idiomas verificados.");
         return 0;
     }

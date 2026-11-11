@@ -1,4 +1,4 @@
-// Copyright (c) 2026 ryzyder. All rights reserved.
+﻿// Copyright (c) 2026 ryzyder. All rights reserved.
 // Project-owned portions are subject to the root LICENSE; third-party notices remain applicable.
 using System;
 using System.IO;
@@ -39,6 +39,9 @@ internal sealed class ProfileStore {
         if(Items.Count==0 && !File.Exists(file) && File.Exists(initialRdp)) {
             var p=Import(initialRdp); p.Name="Administrator"; ActiveId=p.Id; Save();
         }
+        // A fresh or empty store must not start supervision when its first profile
+        // is merely saved or imported. Only Connect explicitly enables it.
+        if(Items.Count==0)Enabled=false;
     }
     internal ConnectionProfile Active { get { return Items.FirstOrDefault(p=>p.Id==ActiveId) ?? Items.FirstOrDefault(); } }
     internal static string Setting(string[] lines,string key) {
@@ -115,6 +118,7 @@ internal sealed class ConnectionManager : Form {
     readonly Label resourceSummary;
     readonly Dictionary<string,CheckBox> resourceChecks=new Dictionary<string,CheckBox>();
     readonly CheckBox startup;
+    readonly CheckBox desktop2;
     readonly ComboBox language;
     readonly System.Windows.Forms.Timer refresh;
     ConnectionProfile editing;
@@ -133,6 +137,7 @@ internal sealed class ConnectionManager : Form {
         header.Controls.Add(new PictureBox { Image=Image.FromFile(Path.Combine(Supervisor.Folder,"RDP-Permanente.png")),SizeMode=PictureBoxSizeMode.Zoom,Bounds=new Rectangle(26,22,48,48) });
         header.Controls.Add(new Label { Text="AlwaysRDP",Font=new Font("Segoe UI Semibold",19F),ForeColor=Color.White,AutoSize=true,Location=new Point(90,15) });
         header.Controls.Add(new Label { Text=L.T("Tus conexiones, siempre a mano."),ForeColor=Color.FromArgb(191,210,223),AutoSize=true,Location=new Point(92,56) });
+        header.Controls.Add(new Label { Text="v"+Application.ProductVersion,ForeColor=Color.FromArgb(191,210,223),AutoSize=true,Location=new Point(26,75),Font=new Font("Segoe UI",8F) });
         header.Controls.Add(new Label {Text=L.T("Idioma"),ForeColor=Color.FromArgb(191,210,223),AutoSize=true,Location=new Point(552,12),Anchor=AnchorStyles.Top|AnchorStyles.Right,Font=new Font("Segoe UI",9F)});
         language=new ComboBox {DropDownStyle=ComboBoxStyle.DropDownList,Bounds=new Rectangle(552,35,160,30),Anchor=AnchorStyles.Top|AnchorStyles.Right,AccessibleName=L.T("Idioma")};
         language.Items.AddRange(new object[]{"English","Español","Português"});language.SelectedIndex=Array.IndexOf(new[]{L.T("en"),"es","pt"},L.Language);header.Controls.Add(language);
@@ -167,8 +172,8 @@ internal sealed class ConnectionManager : Form {
         content.Controls.Add(passwordHint,0,12);
         resourceSummary=new Label { Text="Pantalla completa  ·  Escritorio 2  ·  Solo portapapeles",Dock=DockStyle.Fill,ForeColor=Teal,Font=new Font("Segoe UI Semibold",9F),Margin=Padding.Empty };
         content.Controls.Add(resourceSummary,0,13);
-        var optionsLayout=new TableLayoutPanel {Dock=DockStyle.Fill,ColumnCount=1,RowCount=6,Padding=new Padding(20,16,20,10),AutoScroll=true};
-        foreach(int h in new[]{26,42,204,28,36,52})optionsLayout.RowStyles.Add(new RowStyle(SizeType.Absolute,h));
+        var optionsLayout=new TableLayoutPanel {Dock=DockStyle.Fill,ColumnCount=1,RowCount=9,Padding=new Padding(20,16,20,10),AutoScroll=true};
+        foreach(int h in new[]{26,36,194,26,36,32,28,36,50})optionsLayout.RowStyles.Add(new RowStyle(SizeType.Absolute,h));
         optionsTab.Controls.Add(optionsLayout);
         AddLabel(optionsLayout,L.T("RECURSOS DE ESTA CONEXIÓN"),0,true);
         optionsLayout.Controls.Add(new Label {Text=L.T("Elige qué compartir con el equipo remoto. Pulsa Guardar o Conectar para aplicar."),Dock=DockStyle.Fill,Font=new Font("Segoe UI",9F),ForeColor=Color.FromArgb(88,102,117)},0,1);
@@ -182,10 +187,15 @@ internal sealed class ConnectionManager : Form {
             check.CheckedChanged += delegate {UpdateResourceSummary();};
         }
         optionsLayout.Controls.Add(resourcesGrid,0,2);
-        AddLabel(optionsLayout,L.T("INICIO DE WINDOWS · TODAS LAS CONEXIONES"),3,true);
+        AddLabel(optionsLayout,L.T("ESCRITORIO VIRTUAL · TODAS LAS CONEXIONES"),3,true);
+        desktop2=new CheckBox {Text=L.T("Mover sesiones a Escritorio 2"),Dock=DockStyle.Fill,AutoSize=true,Checked=Desktop2Controller.Enabled};
+        optionsLayout.Controls.Add(desktop2,0,4);
+        optionsLayout.Controls.Add(new Label {Text=L.T("Activo por defecto. Se inicia en segundo plano y mueve cada sesión nueva a Escritorio 2."),Dock=DockStyle.Fill,Font=new Font("Segoe UI",9F),ForeColor=Color.FromArgb(88,102,117)},0,5);
+        desktop2.CheckedChanged+=delegate {try {Desktop2Controller.Set(desktop2.Checked);}catch(Exception ex){MessageBox.Show(this,ex.Message,L.T("Escritorio 2"),MessageBoxButtons.OK,MessageBoxIcon.Information);}};
+        AddLabel(optionsLayout,L.T("INICIO DE WINDOWS · TODAS LAS CONEXIONES"),6,true);
         startup=new CheckBox {Text=L.T("Iniciar AlwaysRDP al entrar en Windows"),Dock=DockStyle.Fill,AutoSize=true,Checked=StartupSettings.Enabled};
-        optionsLayout.Controls.Add(startup,0,4);
-        optionsLayout.Controls.Add(new Label {Text=L.T("Se inicia en segundo plano. Recupera la última conexión si no la dejaste detenida.\r\nEsta opción se aplica al marcarla; los recursos se guardan por conexión."),Dock=DockStyle.Fill,Font=new Font("Segoe UI",9F),ForeColor=Color.FromArgb(88,102,117)},0,5);
+        optionsLayout.Controls.Add(startup,0,7);
+        optionsLayout.Controls.Add(new Label {Text=L.T("Se inicia minimizado en la bandeja y recupera la última conexión si no la dejaste detenida."),Dock=DockStyle.Fill,Font=new Font("Segoe UI",9F),ForeColor=Color.FromArgb(88,102,117)},0,8);
         startup.CheckedChanged += delegate {
             if(changingStartup)return;
             try {StartupSettings.Set(startup.Checked);}
@@ -231,7 +241,7 @@ internal sealed class ConnectionManager : Form {
     }
     bool changingStartup;
     SharedResources ReadResources() {var resources=new SharedResources();foreach(var pair in resourceChecks)resources.Set(pair.Key,pair.Value.Checked);return resources;}
-    void UpdateResourceSummary() {if(resourceChecks.Count==SharedResources.Options.Length)resourceSummary.Text=L.F("Pantalla completa  ·  Escritorio 2  ·  {0}",ReadResources().Summary);}
+    void UpdateResourceSummary() {if(resourceChecks.Count==SharedResources.Options.Length)resourceSummary.Text=L.F("Pantalla completa  ·  {0}",ReadResources().Summary);}
     void NewProfile() { profiles.SelectedIndex=-1; LoadProfile(null); name.Focus(); }
     void DeleteSelected() {
         if(editing==null){MessageBox.Show(this,L.T("Selecciona un perfil guardado para eliminarlo."),L.T("Eliminar perfil"),MessageBoxButtons.OK,MessageBoxIcon.Information);return;}

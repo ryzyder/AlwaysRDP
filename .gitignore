@@ -1,5 +1,6 @@
 # Build outputs and downloaded dependency
 build/
+release/
 bin/
 obj/
 vendor/
@@ -39,3 +40,4 @@ credential-restore*
 Thumbs.db
 Desktop.ini
 .DS_Store
+rdp-preferences-consent.xml
